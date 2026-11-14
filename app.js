@@ -3,7 +3,7 @@
 // -> eye-shape profile + blink guard -> per-user ridge regression (as in gazefocus/model.py)
 // -> fixation filter + spring glide (as in gazefocus/smoothing.py) -> dwell to focus, undo,
 // and learning from taps (as in gazefocus/learning.py, drift part).
-import { FaceLandmarker, FilesetResolver } from "./vendor/vision_bundle.mjs";
+import { FaceLandmarker, FilesetResolver } from "./vendor/vision_bundle.js";
 
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
