@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0E151D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 22'%3E%3Cpath d='M2 11 Q17 -4 32 11 Q17 26 2 11 Z' fill='none' stroke='%2350D2FF' stroke-width='2'/%3E%3Ccircle cx='17' cy='11' r='5.5' fill='%2350D2FF'/%3E%3C/svg%3E">
+<title>GazeFocus Pocket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Sora:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* GazeFocus's own look: slate glass, iris cyan. One screen: four big "windows" you pick with your eyes. */
+  --ink: #0E151D; --base: #121B25; --panel: #17222E; --field: #0F1821; --line: #223142;
+  --text: #E4ECF3; --muted: #8494A6; --accent: #50D2FF; --on-accent: #06202B;
+  --good: #6EE696; --warn: #FFBE50; --bad: #FF7A7A;
+  --display: "Sora", "Segoe UI Variable Display", system-ui, sans-serif;
+  --body: "Figtree", "Segoe UI Variable Text", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text); font-family: var(--body);
+             overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+body { overflow: hidden; touch-action: manipulation; }
+button { font: inherit; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.screen { position: fixed; inset: 0; display: none; }
+.screen.show { display: flex; }
+
+/* intro */
+#intro { flex-direction: column; justify-content: center; gap: 18px;
+         padding: max(24px, env(safe-area-inset-top)) 26px max(24px, env(safe-area-inset-bottom)); max-width: 520px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand h1 { font: 600 26px/1.1 var(--display); margin: 0; letter-spacing: -0.01em; }
+.brand span { color: var(--muted); font-size: 14px; display: block; margin-top: 3px; }
+#intro p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+#intro ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 15px; line-height: 1.45; }
+#intro ol li::marker { color: var(--accent); font-weight: 700; }
+.btn { border-radius: 12px; padding: 14px 18px; font-weight: 700; font-size: 16px; cursor: pointer; border: 1px solid #2B3D51;
+       background: transparent; color: var(--text); }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn.small { padding: 8px 12px; font-size: 13px; border-radius: 9px; font-weight: 600; }
+.err { color: var(--bad); font-size: 14px; line-height: 1.45; min-height: 20px; }
+.tiny { font-size: 12.5px !important; }
+
+/* live */
+#live { flex-direction: column; }
+.bar { display: flex; align-items: center; gap: 8px; padding: max(8px, env(safe-area-inset-top)) 12px 8px; background: var(--base);
+       border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.bar .grow { flex: 1; }
+.chip { font: 600 12px var(--body); border-radius: 999px; padding: 4px 9px; border: 1px solid #2A3646; color: #6D7C8E; white-space: nowrap; }
+.chip.on { color: var(--text); border-color: var(--accent); background: #133041; }
+.chip.w { color: var(--text); border-color: var(--warn); background: #3a2e14; }
+.chip.bad { color: var(--text); border-color: var(--bad); background: #3b1d1d; }
+#tiles { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px;
+         padding: 10px 10px max(10px, env(safe-area-inset-bottom)); }
+.tile { position: relative; background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 14px;
+        display: flex; flex-direction: column; gap: 8px; overflow: hidden; transition: border-color .15s, background .15s; }
+.tile h2 { font: 600 17px var(--display); margin: 0; }
+.tile p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.tile.focus { border-color: var(--accent); background: #16303f; }
+.tile.focus h2 { color: var(--accent); }
+.tile .dwell { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); width: 0; }
+.tile .lines { display: grid; gap: 6px; margin-top: auto; }
+.tile .lines i { display: block; height: 6px; border-radius: 3px; background: #2A3A4C; }
+#fx { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+#cam { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); width: 104px; height: 78px; border-radius: 12px;
+       overflow: hidden; border: 1px solid var(--line); background: #000; z-index: 3; }
+#cam video, #cam canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+#cam.hide video, #cam.hide canvas { display: none; }
+#cam.hide { width: 40px; height: 40px; }
+#toast { position: fixed; left: 50%; top: calc(max(8px, env(safe-area-inset-top)) + 56px); transform: translateX(-50%);
+         background: rgba(14,16,20,.95); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 7px 14px 7px 12px;
+         font: 700 13px var(--body); display: none; align-items: center; gap: 8px; z-index: 4; white-space: nowrap; }
+#toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--accent)); }
+
+/* calibration */
+#cal { background: #06090C; z-index: 5; }
+#calText { position: absolute; left: 0; right: 0; top: 42%; text-align: center; color: var(--muted); font-size: 15px; padding: 0 30px;
+           line-height: 1.5; }
+#calText b { color: var(--text); font-size: 18px; display: block; margin-bottom: 6px; font-family: var(--display); }
+#calDot { position: absolute; width: 0; height: 0; display: none; }
+#calDot::before { content: ""; position: absolute; left: -5px; top: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+#calRing { position: absolute; left: -24px; top: -24px; width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--accent); }
+#calCount { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 0; right: 0; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* results */
+#results { align-items: center; justify-content: center; background: rgba(6,9,12,.86); z-index: 6; padding: 24px; }
+.card { background: var(--base); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 10px; max-width: 420px; }
+.card h3 { margin: 0; font: 600 20px var(--display); }
+.card p { margin: 0; font-size: 15px; line-height: 1.5; }
+.card .muted { color: var(--muted); font-size: 13.5px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .tile { transition: none; } }
+</style>
+</head>
+<body>
+<section class="screen show" id="intro">
+  <div class="brand">
+    <svg width="44" height="28" viewBox="0 0 34 22" aria-hidden="true">
+      <path d="M2 11 Q17 -4 32 11 Q17 26 2 11 Z" fill="none" stroke="#50D2FF" stroke-width="2"/>
+      <circle cx="17" cy="11" r="5.5" fill="#50D2FF"/><circle cx="17" cy="11" r="2.2" fill="#06202B"/>
+    </svg>
+    <div><h1>GazeFocus Pocket</h1><span>Pick a window with your eyes, using your front camera</span></div>
+  </div>
+  <p>A phone-sized taste of GazeFocus: the same idea as the desktop app, with four big windows instead of two monitors. Everything runs on your phone; no video leaves it.</p>
+  <ol>
+    <li>Hold the phone at eye level, about 30 cm away, in good light from the front.</li>
+    <li>Follow 13 dots with your eyes, keeping your head fairly still. It also learns your eye shape.</li>
+    <li>Look at a window for half a second and it takes focus. Tap anywhere you're looking to teach it.</li>
+  </ol>
+  <button class="btn primary" id="startBtn">Start camera</button>
+  <div class="err" id="err" role="alert"></div>
+  <p class="tiny">Expect window-level accuracy: on a phone screen it can tell which quarter you're looking at, not exact spots.</p>
+</section>
+
+<section class="screen" id="live">
+  <div class="bar">
+    <span class="chip" id="cFace">face</span>
+    <span class="chip" id="cEyes">eyes</span>
+    <span class="chip" id="cLight">light</span>
+    <span class="chip" id="cFps">– fps</span>
+    <span class="grow"></span>
+    <button class="btn small" id="undoBtn">Undo</button>
+    <button class="btn small" id="calBtn">Calibrate</button>
+  </div>
+  <div id="tiles">
+    <div class="tile" data-i="0"><h2>Mail</h2><p>3 unread</p><div class="lines"><i style="width:80%"></i><i style="width:60%"></i><i style="width:70%"></i></div><div class="dwell"></div></div>
+    <div class="tile" data-i="1"><h2>Notes</h2><p>Shopping list</p><div class="lines"><i style="width:55%"></i><i style="width:75%"></i><i style="width:40%"></i></div><div class="dwell"></div></div>
+    <div class="tile" data-i="2"><h2>Music</h2><p>Paused</p><div class="lines"><i style="width:90%"></i><i style="width:35%"></i><i style="width:65%"></i></div><div class="dwell"></div></div>
+    <div class="tile" data-i="3"><h2>Chat</h2><p>2 new messages</p><div class="lines"><i style="width:70%"></i><i style="width:85%"></i><i style="width:50%"></i></div><div class="dwell"></div></div>
+  </div>
+  <canvas id="fx"></canvas>
+  <div id="cam" title="Tap to hide the camera view"><video id="video" playsinline muted></video><canvas id="camfx"></canvas></div>
+</section>
+
+<section class="screen" id="cal">
+  <div id="calCount"></div>
+  <div id="calText"><b>Follow the dot with your eyes</b>Keep your head fairly still and the phone where it is.</div>
+  <div id="calDot"><div id="calRing"></div></div>
+</section>
+
+<section class="screen" id="results">
+  <div class="card" role="dialog" aria-labelledby="resTitle">
+    <h3 id="resTitle">Calibrated</h3>
+    <p id="resLine"></p>
+    <p id="resEyes" class="muted"></p>
+    <p class="muted">Look at a window for half a second to focus it. If it drifts, tap where you're looking: each tap teaches it.</p>
+    <div class="row"><button class="btn primary" id="goBtn">Try it</button><button class="btn" id="redoBtn">Redo</button></div>
+  </div>
+</section>
+<div id="toast"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
