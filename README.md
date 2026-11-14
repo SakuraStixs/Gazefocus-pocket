@@ -2,7 +2,7 @@
 
 A phone-sized taste of GazeFocus, the webcam eye-tracking desktop app: pick one of four "windows" just by looking at it, using your phone's front camera.
 
-**Try it:** https://sakurastixs.github.io/gazefocus-pocket/
+**Try it:** https://sakurastixs.github.io/Gazefocus-pocket/
 
 1. Tap **Start camera** and allow the camera.
 2. Hold the phone at eye level, about 30 cm away, with light on your face. Follow the 13 dots with your eyes.
